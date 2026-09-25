@@ -24,39 +24,85 @@ def test_serve_frontend(client):
 
 
 def test_health_check(client):
-    """Test health check endpoint"""
+    """Test health check endpoint with accuracy score"""
     response = client.get('/api/health')
     assert response.status_code == 200
     data = json.loads(response.data)
     assert data['status'] == 'healthy'
     assert data['model_loaded'] is True
+    assert 'accuracy_score' in data
+    assert data['accuracy_score'] > 0
+    assert data['model_type'] == 'Decision Tree Regressor'
     assert 'version' in data
 
 
-def test_valid_prediction_2020(client):
-    """Test prediction for valid year 2020"""
-    payload = {'year': 2020}
+def test_model_info_endpoint(client):
+    """Test model_info endpoint returns metrics, accuracy score, and categories"""
+    response = client.get('/api/model_info')
+    assert response.status_code == 200
+    data = json.loads(response.data)
+    assert data['success'] is True
+    assert data['algorithm'] == 'Decision Tree Regressor'
+    assert 'accuracy_score' in data
+    assert data['accuracy_score'] >= 85.0
+    assert 'categories' in data
+    assert 'brands' in data['categories']
+    assert 'fuels' in data['categories']
+
+
+def test_valid_prediction_full_features(client):
+    """Test prediction with all multi-feature fields provided"""
+    payload = {
+        'brand': 'Hyundai',
+        'year': 2018,
+        'km_driven': 35000,
+        'fuel': 'Diesel',
+        'seller_type': 'Individual',
+        'transmission': 'Manual',
+        'owner': 'First Owner'
+    }
     response = client.post('/api/predict', data=json.dumps(payload), content_type='application/json')
     assert response.status_code == 200
     data = json.loads(response.data)
     assert data['success'] is True
-    assert data['year'] == 2020
+    assert data['inputs']['year'] == 2018
+    assert data['inputs']['brand'] == 'Hyundai'
+    assert data['inputs']['transmission'] == 'Manual'
     assert 'predicted_price' in data
     assert isinstance(data['predicted_price'], (int, float))
     assert data['predicted_price'] > 0
     assert 'formatted_price_inr' in data
-    assert 'valuation_range' in data
+    assert 'model_metadata' in data
+    assert 'accuracy_score' in data['model_metadata']
     assert data['valuation_range']['min'] < data['predicted_price'] < data['valuation_range']['max']
 
 
-def test_valid_prediction_string_year(client):
-    """Test prediction when year is passed as string integer '2024'"""
-    payload = {'year': '2024'}
+def test_valid_prediction_year_only_defaults(client):
+    """Test prediction with only required year and fallback defaults for other features"""
+    payload = {'year': 2015}
     response = client.post('/api/predict', data=json.dumps(payload), content_type='application/json')
     assert response.status_code == 200
     data = json.loads(response.data)
     assert data['success'] is True
-    assert data['year'] == 2024
+    assert data['inputs']['year'] == 2015
+    assert data['inputs']['brand'] == 'Maruti'
+    assert data['inputs']['km_driven'] == 45000
+
+
+def test_valid_prediction_string_inputs(client):
+    """Test prediction when numeric fields are passed as strings"""
+    payload = {
+        'year': '2019',
+        'km_driven': '25000',
+        'brand': 'Tata',
+        'transmission': 'Automatic'
+    }
+    response = client.post('/api/predict', data=json.dumps(payload), content_type='application/json')
+    assert response.status_code == 200
+    data = json.loads(response.data)
+    assert data['success'] is True
+    assert data['inputs']['year'] == 2019
+    assert data['inputs']['km_driven'] == 25000
 
 
 def test_invalid_year_non_numeric(client):
@@ -91,7 +137,7 @@ def test_out_of_range_year_high(client):
 
 def test_missing_year_field(client):
     """Test payload missing the 'year' key"""
-    payload = {'brand': 'Honda'}
+    payload = {'brand': 'Honda', 'km_driven': 50000}
     response = client.post('/api/predict', data=json.dumps(payload), content_type='application/json')
     assert response.status_code == 400
     data = json.loads(response.data)
@@ -100,11 +146,12 @@ def test_missing_year_field(client):
 
 
 def test_predict_range_endpoint(client):
-    """Test yearly prediction range endpoint for charts"""
-    response = client.get('/api/predict_range?start=2015&end=2025')
+    """Test yearly prediction range endpoint with custom brand parameter"""
+    response = client.get('/api/predict_range?start=2015&end=2025&brand=Hyundai&fuel=Diesel')
     assert response.status_code == 200
     data = json.loads(response.data)
     assert data['success'] is True
+    assert data['brand'] == 'Hyundai'
     assert len(data['data']) == 11
     assert data['data'][0]['year'] == 2015
     assert data['data'][-1]['year'] == 2025

@@ -1,18 +1,64 @@
 /* ==========================================================================
-   Cars24 ML Valuation Platform - Client Application Script
+   Cars24 ML Valuation Platform - Client Application Script (v2.0)
    ========================================================================== */
 
 let depreciationChartInstance = null;
-let currentSelectedBrand = 'Maruti Suzuki';
+let currentSelectedBrand = 'Maruti';
 const API_BASE_URL = window.location.origin;
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('[Cars24 ML] App initialized. API Base URL:', API_BASE_URL);
+    console.log('[Cars24 ML v2.0] Initialized with Decision Tree engine. API:', API_BASE_URL);
+    // Fetch model info and accuracy metrics
+    fetchModelMetadata();
     // Initial prediction run
     runPrediction();
-    // Render depreciation chart
+    // Render initial depreciation chart
     loadChartData();
 });
+
+/**
+ * Fetch Decision Tree Model Metadata and Accuracy Scores
+ */
+async function fetchModelMetadata() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/model_info`);
+        if (!response.ok) return;
+        const data = await response.json();
+        if (data.success) {
+            const acc = data.accuracy_score;
+            // Update hero accuracy text
+            const heroAcc = document.getElementById('hero-accuracy-text');
+            if (heroAcc) heroAcc.innerHTML = `Model Accuracy Score: <strong>${acc}%</strong> (R²)`;
+            
+            // Update stats bar
+            const statsVal = document.getElementById('stats-acc-value');
+            if (statsVal) statsVal.textContent = `${acc}%`;
+
+            // Update result card badge
+            const cardBadge = document.getElementById('card-acc-badge');
+            if (cardBadge) cardBadge.textContent = `Accuracy: ${acc}% (R²)`;
+
+            // Update summary
+            const summaryAcc = document.getElementById('summary-acc');
+            if (summaryAcc) summaryAcc.textContent = `${acc}% (R² Score)`;
+
+            // Update metric cards
+            const mR2 = document.getElementById('metric-r2-val');
+            if (mR2) mR2.textContent = `${acc}%`;
+
+            const mTest = document.getElementById('metric-test-val');
+            if (mTest && data.test_r2) mTest.textContent = `${data.test_r2}%`;
+
+            const mMae = document.getElementById('metric-mae-val');
+            if (mMae && data.mae) mMae.textContent = `₹ ${(data.mae / 100000).toFixed(2)} L`;
+
+            const mSamples = document.getElementById('metric-samples-val');
+            if (mSamples && data.sample_count) mSamples.textContent = `${data.sample_count}`;
+        }
+    } catch (e) {
+        console.warn('Could not fetch model metadata:', e);
+    }
+}
 
 /**
  * Synchronize Year range slider with display label
@@ -20,8 +66,8 @@ document.addEventListener('DOMContentLoaded', () => {
 function syncYearInput(val) {
     document.getElementById('year-display').textContent = val;
     document.getElementById('summary-year').textContent = val;
-    // Auto-update request payload in API tester tab
-    document.getElementById('request-payload').querySelector('code').textContent = JSON.stringify({ year: parseInt(val) }, null, 2);
+    updateApiPayloadPreview();
+    runPrediction();
 }
 
 /**
@@ -30,6 +76,9 @@ function syncYearInput(val) {
 function updateKmDisplay(val) {
     const formatted = parseInt(val).toLocaleString('en-IN');
     document.getElementById('km-display').textContent = `${formatted} km`;
+    document.getElementById('summary-km').textContent = `${formatted} km`;
+    updateApiPayloadPreview();
+    runPrediction();
 }
 
 /**
@@ -39,22 +88,92 @@ function selectBrand(chipElement, brandName) {
     document.querySelectorAll('.brand-chip').forEach(chip => chip.classList.remove('active'));
     chipElement.classList.add('active');
     currentSelectedBrand = brandName;
+    document.getElementById('brand-display').textContent = brandName;
     document.getElementById('summary-brand').textContent = brandName;
+    document.getElementById('chart-brand-label').textContent = brandName;
+    
+    // Reset dropdown
+    const brandSelect = document.getElementById('brand-select');
+    if (brandSelect) brandSelect.value = '';
+
+    updateApiPayloadPreview();
+    runPrediction();
+    loadChartData();
 }
 
 /**
- * Main ML Prediction Trigger
+ * Brand Dropdown change handler
+ */
+function onBrandDropdownChange(brandName) {
+    if (!brandName) return;
+    document.querySelectorAll('.brand-chip').forEach(chip => {
+        if (chip.textContent.trim().toLowerCase() === brandName.toLowerCase()) {
+            chip.classList.add('active');
+        } else {
+            chip.classList.remove('active');
+        }
+    });
+    currentSelectedBrand = brandName;
+    document.getElementById('brand-display').textContent = brandName;
+    document.getElementById('summary-brand').textContent = brandName;
+    document.getElementById('chart-brand-label').textContent = brandName;
+    updateApiPayloadPreview();
+    runPrediction();
+    loadChartData();
+}
+
+/**
+ * Collect current form payload
+ */
+function getFormPayload() {
+    const year = parseInt(document.getElementById('year-slider').value);
+    const km_driven = parseInt(document.getElementById('km-slider').value);
+    const fuel = document.getElementById('fuel-select').value;
+    const transmission = document.getElementById('trans-select').value;
+    const seller_type = document.getElementById('seller-select').value;
+    const owner = document.getElementById('owner-select').value;
+
+    return {
+        brand: currentSelectedBrand,
+        year: year,
+        km_driven: km_driven,
+        fuel: fuel,
+        seller_type: seller_type,
+        transmission: transmission,
+        owner: owner
+    };
+}
+
+/**
+ * Update request payload in API tester tab
+ */
+function updateApiPayloadPreview() {
+    const payload = getFormPayload();
+    const reqPayloadEl = document.getElementById('request-payload');
+    if (reqPayloadEl) {
+        reqPayloadEl.querySelector('code').textContent = JSON.stringify(payload, null, 2);
+    }
+}
+
+/**
+ * Main Decision Tree ML Prediction Trigger
  */
 async function runPrediction() {
-    const year = parseInt(document.getElementById('year-slider').value);
+    const payload = getFormPayload();
     const btnText = document.getElementById('btn-text');
     const btnSpinner = document.getElementById('btn-spinner');
     const predictBtn = document.getElementById('predict-btn');
 
     // UI Loading state
-    btnText.style.opacity = '0.5';
-    btnSpinner.classList.remove('hidden');
-    predictBtn.disabled = true;
+    if (btnText) btnText.style.opacity = '0.5';
+    if (btnSpinner) btnSpinner.classList.remove('hidden');
+    if (predictBtn) predictBtn.disabled = true;
+
+    // Update summary preview
+    document.getElementById('summary-fuel').textContent = payload.fuel;
+    document.getElementById('summary-trans').textContent = payload.transmission;
+    document.getElementById('summary-seller').textContent = payload.seller_type;
+    document.getElementById('summary-owner').textContent = payload.owner;
 
     const startTime = performance.now();
 
@@ -62,7 +181,7 @@ async function runPrediction() {
         const response = await fetch(`${API_BASE_URL}/api/predict`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ year: year })
+            body: JSON.stringify(payload)
         });
 
         const latency = Math.round(performance.now() - startTime);
@@ -76,39 +195,63 @@ async function runPrediction() {
             document.getElementById('range-max').textContent = data.valuation_range.formatted_max;
             document.getElementById('summary-latency').textContent = `${latency} ms`;
 
+            if (data.model_metadata && data.model_metadata.accuracy_score) {
+                const accStr = data.model_metadata.accuracy_score;
+                const cardBadge = document.getElementById('card-acc-badge');
+                if (cardBadge) cardBadge.textContent = `Accuracy: ${accStr} (R²)`;
+                const summaryAcc = document.getElementById('summary-acc');
+                if (summaryAcc) summaryAcc.textContent = `${accStr} (R² Score)`;
+            }
+
             // Update API Tester Tab Response
-            document.getElementById('api-status-code').textContent = '200 OK';
-            document.getElementById('api-status-code').className = 'status-200';
-            document.getElementById('api-time').textContent = `${latency} ms`;
-            document.getElementById('response-payload').querySelector('code').textContent = JSON.stringify(data, null, 2);
+            const statusCode = document.getElementById('api-status-code');
+            if (statusCode) {
+                statusCode.textContent = '200 OK';
+                statusCode.className = 'status-200';
+            }
+            const timeBadge = document.getElementById('api-time');
+            if (timeBadge) timeBadge.textContent = `${latency} ms`;
+
+            const respPayloadEl = document.getElementById('response-payload');
+            if (respPayloadEl) {
+                respPayloadEl.querySelector('code').textContent = JSON.stringify(data, null, 2);
+            }
 
             // Highlight selected point on Chart
             if (depreciationChartInstance) {
-                highlightChartPoint(year);
+                highlightChartPoint(payload.year);
             }
         } else {
             showToast(data.error || 'Failed to calculate prediction', 'danger');
-            document.getElementById('api-status-code').textContent = `${response.status} Error`;
-            document.getElementById('api-status-code').className = 'text-danger';
-            document.getElementById('response-payload').querySelector('code').textContent = JSON.stringify(data, null, 2);
+            const statusCode = document.getElementById('api-status-code');
+            if (statusCode) {
+                statusCode.textContent = `${response.status} Error`;
+                statusCode.className = 'text-danger';
+            }
+            const respPayloadEl = document.getElementById('response-payload');
+            if (respPayloadEl) {
+                respPayloadEl.querySelector('code').textContent = JSON.stringify(data, null, 2);
+            }
         }
 
     } catch (err) {
         console.error('[API Error]', err);
         showToast('Network error: Unable to reach backend API', 'danger');
     } finally {
-        btnText.style.opacity = '1';
-        btnSpinner.classList.add('hidden');
-        predictBtn.disabled = false;
+        if (btnText) btnText.style.opacity = '1';
+        if (btnSpinner) btnSpinner.classList.add('hidden');
+        if (predictBtn) predictBtn.disabled = false;
     }
 }
 
 /**
- * Fetch yearly range data and initialize Chart.js
+ * Fetch yearly range data and initialize Chart.js for selected brand
  */
 async function loadChartData() {
     try {
-        const response = await fetch(`${API_BASE_URL}/api/predict_range?start=2010&end=2026`);
+        const payload = getFormPayload();
+        const url = `${API_BASE_URL}/api/predict_range?start=2010&end=2026&brand=${encodeURIComponent(payload.brand)}&fuel=${encodeURIComponent(payload.fuel)}&transmission=${encodeURIComponent(payload.transmission)}`;
+        const response = await fetch(url);
         const result = await response.json();
 
         if (!response.ok || !result.success) return;
@@ -116,7 +259,9 @@ async function loadChartData() {
         const labels = result.data.map(item => item.year);
         const pricesLakhs = result.data.map(item => (item.price / 100000).toFixed(2));
 
-        const ctx = document.getElementById('depreciationChart').getContext('2d');
+        const canvas = document.getElementById('depreciationChart');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
 
         if (depreciationChartInstance) {
             depreciationChartInstance.destroy();
@@ -131,7 +276,7 @@ async function loadChartData() {
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Valuation (in ₹ Lakhs)',
+                    label: `${result.brand || currentSelectedBrand} Valuation (in ₹ Lakhs)`,
                     data: pricesLakhs,
                     borderColor: '#3B82F6',
                     borderWidth: 3,
@@ -175,6 +320,8 @@ async function loadChartData() {
             }
         });
 
+        highlightChartPoint(payload.year);
+
     } catch (e) {
         console.error('Failed to load chart data:', e);
     }
@@ -200,6 +347,7 @@ function highlightChartPoint(targetYear) {
  */
 function animateCounter(elementId, targetFormattedText) {
     const el = document.getElementById(elementId);
+    if (!el) return;
     el.style.opacity = '0';
     setTimeout(() => {
         el.textContent = targetFormattedText;
@@ -212,7 +360,7 @@ function animateCounter(elementId, targetFormattedText) {
  */
 function executeApiTest() {
     runPrediction();
-    showToast('API request dispatched to /api/predict', 'info');
+    showToast('Dispatched request to /api/predict', 'info');
 }
 
 /**
@@ -223,11 +371,15 @@ function copyQuote() {
     const lakhs = document.getElementById('resale-lakhs').textContent;
     const year = document.getElementById('summary-year').textContent;
     const brand = document.getElementById('summary-brand').textContent;
+    const km = document.getElementById('summary-km').textContent;
+    const trans = document.getElementById('summary-trans').textContent;
+    const fuel = document.getElementById('summary-fuel').textContent;
+    const acc = document.getElementById('summary-acc').textContent;
 
-    const text = `🚗 Cars24 AI Car Valuation Quote\n• Vehicle: ${brand} (${year})\n• Estimated Value: ${price} (${lakhs})\n• Generated via Cars24 Scikit-Learn ML Model`;
+    const text = `🚗 Cars24 AI Valuation Quote (Decision Tree Model)\n• Vehicle: ${brand} (${year})\n• Specs: ${fuel} | ${trans} | ${km}\n• Estimated Value: ${price} (${lakhs})\n• Model Accuracy: ${acc}\n• Powered by Cars24 ML Decision Tree Engine`;
 
     navigator.clipboard.writeText(text).then(() => {
-        showToast('Quote copied to clipboard!', 'success');
+        showToast('Valuation quote copied to clipboard!', 'success');
     }).catch(() => {
         showToast('Failed to copy quote', 'danger');
     });
@@ -237,7 +389,9 @@ function copyQuote() {
  * Copy code snippet from element
  */
 function copyCode(elementId) {
-    const codeText = document.getElementById(elementId).innerText;
+    const codeEl = document.getElementById(elementId);
+    if (!codeEl) return;
+    const codeText = codeEl.innerText;
     navigator.clipboard.writeText(codeText).then(() => {
         showToast('Copied payload to clipboard', 'info');
     });
@@ -248,6 +402,7 @@ function copyCode(elementId) {
  */
 function showToast(message, type = 'info') {
     const container = document.getElementById('toast-container');
+    if (!container) return;
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
     

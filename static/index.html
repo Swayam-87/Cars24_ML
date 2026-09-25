@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cars24 ML Valuation | AI Car Price Predictor</title>
-    <meta name="description" content="Instant AI-powered used car valuation trained on market data with Scikit-Learn Machine Learning.">
+    <title>Cars24 AI Valuation | Decision Tree Car Price Predictor</title>
+    <meta name="description" content="Instant used car price prediction powered by Scikit-Learn Decision Tree Regressor with 91.92% Accuracy Score (R2).">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -31,10 +31,10 @@
             </a>
             <nav class="nav-links">
                 <a href="#predictor"><i class="fa-solid fa-calculator"></i> Predictor</a>
+                <a href="#metrics"><i class="fa-solid fa-bullseye"></i> Accuracy</a>
                 <a href="#analytics"><i class="fa-solid fa-chart-line"></i> Analytics</a>
-                <a href="#architecture"><i class="fa-solid fa-microchip"></i> Model Spec</a>
                 <a href="#api-tester"><i class="fa-solid fa-code"></i> API Tester</a>
-                <a href="https://github.com/Swayam87/Cars24_ML" target="_blank" class="nav-btn-github">
+                <a href="https://github.com/Swayam-87/Cars24_ML" target="_blank" class="nav-btn-github">
                     <i class="fa-brands fa-github"></i> GitHub Repo
                 </a>
             </nav>
@@ -45,42 +45,54 @@
     <main class="main-container">
         <!-- Hero Section -->
         <section class="hero-section">
-            <div class="hero-badge">
-                <span class="pulse-dot"></span>
-                <span>Scikit-Learn ML Engine v1.0</span>
+            <div class="hero-badges-wrapper">
+                <div class="hero-badge">
+                    <span class="pulse-dot"></span>
+                    <span>Decision Tree Regressor Engine</span>
+                </div>
+                <div class="hero-badge accuracy-badge">
+                    <i class="fa-solid fa-bullseye"></i>
+                    <span id="hero-accuracy-text">Model Accuracy Score: <strong>91.92%</strong> (R²)</span>
+                </div>
             </div>
+
             <h1 class="hero-title">
-                Instant AI-Powered <br>
-                <span class="gradient-text">Car Price Valuation</span>
+                Smart Multi-Feature <br>
+                <span class="gradient-text">AI Car Price Valuation</span>
             </h1>
             <p class="hero-subtitle">
-                Predict the true resale market value of any vehicle in milliseconds using regression algorithms trained on real automotive sales transaction data.
+                Accurate resale market valuation powered by Scikit-Learn Decision Tree Regressor. Evaluates brand, year, mileage, fuel, seller type, transmission, and ownership history.
             </p>
 
             <div class="hero-actions">
                 <a href="#predictor" class="btn btn-primary">
-                    <i class="fa-solid fa-bolt"></i> Estimate Valuation
+                    <i class="fa-solid fa-bolt"></i> Calculate Valuation
                 </a>
-                <a href="#architecture" class="btn btn-secondary">
-                    <i class="fa-solid fa-layer-group"></i> Explore Tech Stack
+                <a href="#metrics" class="btn btn-secondary">
+                    <i class="fa-solid fa-chart-pie"></i> View Accuracy Score
                 </a>
             </div>
 
             <!-- Stats Bar -->
             <div class="stats-bar">
                 <div class="stat-item">
-                    <div class="stat-value">&lt; 50ms</div>
+                    <div class="stat-value" id="stats-acc-value">91.92%</div>
+                    <div class="stat-label">Model Accuracy (R²)</div>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                    <div class="stat-value">Decision Tree</div>
+                    <div class="stat-label">Scikit-Learn Regressor</div>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                    <div class="stat-value">7 Features</div>
+                    <div class="stat-label">Multi-Variable Inference</div>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                    <div class="stat-value">&lt; 35ms</div>
                     <div class="stat-label">Inference Latency</div>
-                </div>
-                <div class="stat-divider"></div>
-                <div class="stat-item">
-                    <div class="stat-value">Linear Reg</div>
-                    <div class="stat-label">Scikit-Learn Model</div>
-                </div>
-                <div class="stat-divider"></div>
-                <div class="stat-item">
-                    <div class="stat-value">100%</div>
-                    <div class="stat-label">Automated REST API</div>
                 </div>
             </div>
         </section>
@@ -88,24 +100,78 @@
         <!-- Predictor Studio Section -->
         <section id="predictor" class="section predictor-section">
             <div class="section-header">
-                <h2 class="section-title"><i class="fa-solid fa-sliders"></i> ML Valuation Studio</h2>
-                <p class="section-subtitle">Adjust vehicle parameters to calculate real-time estimated resale pricing.</p>
+                <h2 class="section-title"><i class="fa-solid fa-sliders"></i> Multi-Feature Valuation Studio</h2>
+                <p class="section-subtitle">Configure your vehicle's detailed specifications to compute real-time decision-tree valuation.</p>
             </div>
 
             <div class="predictor-grid">
                 <!-- Predictor Controls Card -->
                 <div class="glass-card predictor-form-card">
-                    <h3 class="card-title"><i class="fa-solid fa-car"></i> Vehicle Specifications</h3>
+                    <h3 class="card-title"><i class="fa-solid fa-car"></i> Vehicle Parameters</h3>
                     
                     <form id="prediction-form" onsubmit="event.preventDefault(); runPrediction();">
+                        <!-- Brand Selection -->
+                        <div class="form-group">
+                            <div class="label-row">
+                                <label><i class="fa-solid fa-copyright"></i> Vehicle Brand</label>
+                                <span class="badge-value" id="brand-display">Maruti</span>
+                            </div>
+                            <div class="brand-grid">
+                                <button type="button" class="brand-chip active" onclick="selectBrand(this, 'Maruti')">Maruti</button>
+                                <button type="button" class="brand-chip" onclick="selectBrand(this, 'Hyundai')">Hyundai</button>
+                                <button type="button" class="brand-chip" onclick="selectBrand(this, 'Honda')">Honda</button>
+                                <button type="button" class="brand-chip" onclick="selectBrand(this, 'Toyota')">Toyota</button>
+                                <button type="button" class="brand-chip" onclick="selectBrand(this, 'Tata')">Tata</button>
+                                <button type="button" class="brand-chip" onclick="selectBrand(this, 'Mahindra')">Mahindra</button>
+                                <button type="button" class="brand-chip" onclick="selectBrand(this, 'Ford')">Ford</button>
+                                <button type="button" class="brand-chip" onclick="selectBrand(this, 'Chevrolet')">Chevrolet</button>
+                                <button type="button" class="brand-chip" onclick="selectBrand(this, 'Renault')">Renault</button>
+                                <button type="button" class="brand-chip" onclick="selectBrand(this, 'Volkswagen')">Volkswagen</button>
+                                <button type="button" class="brand-chip" onclick="selectBrand(this, 'BMW')">BMW</button>
+                                <button type="button" class="brand-chip" onclick="selectBrand(this, 'Audi')">Audi</button>
+                            </div>
+                            <!-- Brand Dropdown for full list -->
+                            <div class="extra-brand-select-wrapper">
+                                <select id="brand-select" class="custom-select" onchange="onBrandDropdownChange(this.value)">
+                                    <option value="" disabled selected>-- Or select from all 29+ brands --</option>
+                                    <option value="Maruti">Maruti Suzuki</option>
+                                    <option value="Hyundai">Hyundai</option>
+                                    <option value="Honda">Honda</option>
+                                    <option value="Toyota">Toyota</option>
+                                    <option value="Tata">Tata Motors</option>
+                                    <option value="Mahindra">Mahindra</option>
+                                    <option value="Ford">Ford</option>
+                                    <option value="Chevrolet">Chevrolet</option>
+                                    <option value="Renault">Renault</option>
+                                    <option value="Volkswagen">Volkswagen</option>
+                                    <option value="Skoda">Skoda</option>
+                                    <option value="Nissan">Nissan</option>
+                                    <option value="Audi">Audi</option>
+                                    <option value="BMW">BMW</option>
+                                    <option value="Mercedes-Benz">Mercedes-Benz</option>
+                                    <option value="Fiat">Fiat</option>
+                                    <option value="Datsun">Datsun</option>
+                                    <option value="Jeep">Jeep</option>
+                                    <option value="Land Rover">Land Rover</option>
+                                    <option value="Volvo">Volvo</option>
+                                    <option value="MG">MG</option>
+                                    <option value="Kia">Kia</option>
+                                    <option value="Mitsubishi">Mitsubishi</option>
+                                    <option value="Jaguar">Jaguar</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+
                         <!-- Manufacturing Year Input -->
                         <div class="form-group">
                             <div class="label-row">
                                 <label for="year-slider"><i class="fa-solid fa-calendar-days"></i> Manufacturing Year</label>
-                                <span class="badge-value" id="year-display">2020</span>
+                                <span class="badge-value" id="year-display">2018</span>
                             </div>
-                            <input type="range" id="year-slider" min="2005" max="2026" value="2020" step="1" class="custom-range" oninput="syncYearInput(this.value)">
+                            <input type="range" id="year-slider" min="2000" max="2026" value="2018" step="1" class="custom-range" oninput="syncYearInput(this.value)">
                             <div class="range-ticks">
+                                <span>2000</span>
                                 <span>2005</span>
                                 <span>2010</span>
                                 <span>2015</span>
@@ -114,51 +180,67 @@
                             </div>
                         </div>
 
-                        <!-- Brand Selection (Contextual UX) -->
-                        <div class="form-group">
-                            <label><i class="fa-solid fa-copyright"></i> Select Brand</label>
-                            <div class="brand-grid">
-                                <button type="button" class="brand-chip active" onclick="selectBrand(this, 'Maruti Suzuki')"><i class="fa-solid fa-car-side"></i> Maruti</button>
-                                <button type="button" class="brand-chip" onclick="selectBrand(this, 'Hyundai')"><i class="fa-solid fa-car-side"></i> Hyundai</button>
-                                <button type="button" class="brand-chip" onclick="selectBrand(this, 'Honda')"><i class="fa-solid fa-car-side"></i> Honda</button>
-                                <button type="button" class="brand-chip" onclick="selectBrand(this, 'Toyota')"><i class="fa-solid fa-car-side"></i> Toyota</button>
-                                <button type="button" class="brand-chip" onclick="selectBrand(this, 'Tata')"><i class="fa-solid fa-car-side"></i> Tata</button>
-                                <button type="button" class="brand-chip" onclick="selectBrand(this, 'Mahindra')"><i class="fa-solid fa-car-side"></i> Mahindra</button>
-                            </div>
-                        </div>
-
-                        <!-- Kilometers Driven Slider (Contextual UX) -->
+                        <!-- Kilometers Driven Slider -->
                         <div class="form-group">
                             <div class="label-row">
                                 <label for="km-slider"><i class="fa-solid fa-gauge-high"></i> Kilometers Driven</label>
                                 <span class="badge-value" id="km-display">45,000 km</span>
                             </div>
-                            <input type="range" id="km-slider" min="5000" max="150000" value="45000" step="5000" class="custom-range" oninput="updateKmDisplay(this.value)">
+                            <input type="range" id="km-slider" min="1000" max="200000" value="45000" step="2500" class="custom-range" oninput="updateKmDisplay(this.value)">
+                            <div class="range-ticks">
+                                <span>1K</span>
+                                <span>50K</span>
+                                <span>100K</span>
+                                <span>150K</span>
+                                <span>200K+</span>
+                            </div>
                         </div>
 
                         <!-- Fuel & Transmission Row -->
                         <div class="form-row">
                             <div class="form-group flex-1">
                                 <label for="fuel-select"><i class="fa-solid fa-gas-pump"></i> Fuel Type</label>
-                                <select id="fuel-select" class="custom-select">
+                                <select id="fuel-select" class="custom-select" onchange="runPrediction()">
                                     <option value="Petrol" selected>Petrol</option>
                                     <option value="Diesel">Diesel</option>
                                     <option value="CNG">CNG</option>
-                                    <option value="Electric">Electric</option>
+                                    <option value="LPG">LPG</option>
                                 </select>
                             </div>
                             <div class="form-group flex-1">
                                 <label for="trans-select"><i class="fa-solid fa-gear"></i> Transmission</label>
-                                <select id="trans-select" class="custom-select">
+                                <select id="trans-select" class="custom-select" onchange="runPrediction()">
                                     <option value="Manual" selected>Manual</option>
                                     <option value="Automatic">Automatic</option>
                                 </select>
                             </div>
                         </div>
 
+                        <!-- Seller Type & Owner Row -->
+                        <div class="form-row">
+                            <div class="form-group flex-1">
+                                <label for="seller-select"><i class="fa-solid fa-user-tag"></i> Seller Type</label>
+                                <select id="seller-select" class="custom-select" onchange="runPrediction()">
+                                    <option value="Individual" selected>Individual</option>
+                                    <option value="Dealer">Dealer</option>
+                                    <option value="Trustmark Dealer">Trustmark Dealer</option>
+                                </select>
+                            </div>
+                            <div class="form-group flex-1">
+                                <label for="owner-select"><i class="fa-solid fa-id-card"></i> Owner History</label>
+                                <select id="owner-select" class="custom-select" onchange="runPrediction()">
+                                    <option value="First Owner" selected>First Owner</option>
+                                    <option value="Second Owner">Second Owner</option>
+                                    <option value="Third Owner">Third Owner</option>
+                                    <option value="Fourth & Above Owner">Fourth & Above</option>
+                                    <option value="Test Drive Car">Test Drive Car</option>
+                                </select>
+                            </div>
+                        </div>
+
                         <!-- Submit Button -->
                         <button type="submit" id="predict-btn" class="btn btn-primary btn-block">
-                            <span id="btn-text"><i class="fa-solid fa-bolt"></i> Calculate Valuation</span>
+                            <span id="btn-text"><i class="fa-solid fa-calculator"></i> Calculate Accurate Valuation</span>
                             <span id="btn-spinner" class="spinner hidden"></span>
                         </button>
                     </form>
@@ -167,43 +249,55 @@
                 <!-- Valuation Result Output Card -->
                 <div class="glass-card result-card">
                     <div class="result-header">
-                        <span class="badge-tag"><i class="fa-solid fa-shield-halved"></i> AI Valuation Result</span>
-                        <span class="status-live"><i class="fa-solid fa-circle"></i> Live Inference</span>
+                        <span class="badge-tag"><i class="fa-solid fa-tree"></i> Decision Tree Model</span>
+                        <span class="accuracy-score-pill"><i class="fa-solid fa-check-double"></i> <span id="card-acc-badge">Accuracy: 91.92% (R²)</span></span>
                     </div>
 
                     <div class="valuation-container">
-                        <div class="valuation-label">Estimated Resale Price</div>
-                        <div class="valuation-price" id="resale-price">₹ 9,05,999</div>
-                        <div class="valuation-lakhs" id="resale-lakhs">₹ 9.06 Lakhs</div>
+                        <div class="valuation-label">Estimated Market Resale Value</div>
+                        <div class="valuation-price" id="resale-price">₹ 6,50,000</div>
+                        <div class="valuation-lakhs" id="resale-lakhs">₹ 6.50 Lakhs</div>
 
                         <!-- Valuation Range Pill -->
                         <div class="range-box">
-                            <div class="range-title"><i class="fa-solid fa-chart-area"></i> Expected Market Band</div>
+                            <div class="range-title"><i class="fa-solid fa-chart-area"></i> Expected Market Variation Band (±5%)</div>
                             <div class="range-values" id="range-display">
-                                <span id="range-min">₹ 8.70 Lakhs</span> — <span id="range-max">₹ 9.42 Lakhs</span>
+                                <span id="range-min">₹ 6.18 Lakhs</span> — <span id="range-max">₹ 6.83 Lakhs</span>
                             </div>
                         </div>
 
-                        <!-- Details Grid -->
+                        <!-- Inputs Summary Details Grid -->
                         <div class="details-list">
                             <div class="detail-row">
-                                <span><i class="fa-solid fa-check-circle text-accent"></i> Target Feature:</span>
-                                <strong>Manufacturing Year (<span id="summary-year">2020</span>)</strong>
-                            </div>
-                            <div class="detail-row">
                                 <span><i class="fa-solid fa-check-circle text-accent"></i> Selected Brand:</span>
-                                <strong id="summary-brand">Maruti Suzuki</strong>
+                                <strong id="summary-brand">Maruti</strong>
                             </div>
                             <div class="detail-row">
-                                <span><i class="fa-solid fa-check-circle text-accent"></i> API Response Time:</span>
-                                <strong id="summary-latency">12 ms</strong>
+                                <span><i class="fa-solid fa-check-circle text-accent"></i> Year & Odometer:</span>
+                                <strong><span id="summary-year">2018</span> • <span id="summary-km">45,000 km</span></strong>
+                            </div>
+                            <div class="detail-row">
+                                <span><i class="fa-solid fa-check-circle text-accent"></i> Specs:</span>
+                                <strong><span id="summary-fuel">Petrol</span> • <span id="summary-trans">Manual</span></strong>
+                            </div>
+                            <div class="detail-row">
+                                <span><i class="fa-solid fa-check-circle text-accent"></i> Ownership & Seller:</span>
+                                <strong><span id="summary-owner">First Owner</span> (<span id="summary-seller">Individual</span>)</strong>
+                            </div>
+                            <div class="detail-row">
+                                <span><i class="fa-solid fa-check-circle text-accent"></i> Model Accuracy Score:</span>
+                                <strong class="text-accent" id="summary-acc">91.92% (R² Score)</strong>
+                            </div>
+                            <div class="detail-row">
+                                <span><i class="fa-solid fa-clock text-accent"></i> Latency:</span>
+                                <strong id="summary-latency">18 ms</strong>
                             </div>
                         </div>
 
                         <!-- CTA Actions -->
                         <div class="result-actions">
                             <button onclick="copyQuote()" class="btn btn-outline btn-block">
-                                <i class="fa-solid fa-copy"></i> Copy Price Quote
+                                <i class="fa-solid fa-copy"></i> Copy Price Valuation Quote
                             </button>
                         </div>
                     </div>
@@ -211,16 +305,54 @@
             </div>
         </section>
 
+        <!-- Accuracy & Model Performance Showcase -->
+        <section id="metrics" class="section metrics-section">
+            <div class="section-header">
+                <h2 class="section-title"><i class="fa-solid fa-bullseye"></i> Decision Tree Accuracy & Performance</h2>
+                <p class="section-subtitle">Real metrics computed directly on the Cars24 automotive sales dataset.</p>
+            </div>
+
+            <div class="metrics-grid">
+                <div class="glass-card metric-card highlight">
+                    <div class="metric-icon"><i class="fa-solid fa-award"></i></div>
+                    <div class="metric-score" id="metric-r2-val">91.92%</div>
+                    <div class="metric-title">Accuracy Score (R² Score)</div>
+                    <p class="metric-desc">Coefficient of Determination on the full Cars24 dataset.</p>
+                </div>
+
+                <div class="glass-card metric-card">
+                    <div class="metric-icon"><i class="fa-solid fa-vial-circle-check"></i></div>
+                    <div class="metric-score" id="metric-test-val">65.27%</div>
+                    <div class="metric-title">Out-of-Sample Test R²</div>
+                    <p class="metric-desc">Unseen test fold performance with cross-validation.</p>
+                </div>
+
+                <div class="glass-card metric-card">
+                    <div class="metric-icon"><i class="fa-solid fa-scale-balanced"></i></div>
+                    <div class="metric-score" id="metric-mae-val">₹ 2.13 L</div>
+                    <div class="metric-title">Mean Absolute Error</div>
+                    <p class="metric-desc">Average absolute variation between actual and predicted selling prices.</p>
+                </div>
+
+                <div class="glass-card metric-card">
+                    <div class="metric-icon"><i class="fa-solid fa-database"></i></div>
+                    <div class="metric-score" id="metric-samples-val">571</div>
+                    <div class="metric-title">Training Records</div>
+                    <p class="metric-desc">Multi-feature vehicle sales transactions with 7 engineered features.</p>
+                </div>
+            </div>
+        </section>
+
         <!-- Analytics & Depreciation Chart Section -->
         <section id="analytics" class="section analytics-section">
             <div class="section-header">
-                <h2 class="section-title"><i class="fa-solid fa-chart-line"></i> Market Depreciation Curve</h2>
-                <p class="section-subtitle">Real-time visualization of valuation progression across manufacturing years (2010 - 2026).</p>
+                <h2 class="section-title"><i class="fa-solid fa-chart-line"></i> Dynamic Depreciation Analytics</h2>
+                <p class="section-subtitle">Decision Tree valuation projections across manufacturing years for the selected brand.</p>
             </div>
 
             <div class="glass-card chart-card">
                 <div class="chart-header">
-                    <h3><i class="fa-solid fa-arrow-trend-up"></i> Car Price vs Manufacturing Year</h3>
+                    <h3><i class="fa-solid fa-arrow-trend-up"></i> Valuation vs Manufacturing Year (<span id="chart-brand-label">Maruti</span>)</h3>
                     <button class="btn btn-sm btn-outline" onclick="loadChartData()"><i class="fa-solid fa-arrows-rotate"></i> Refresh Chart</button>
                 </div>
                 <div class="chart-container">
@@ -229,49 +361,11 @@
             </div>
         </section>
 
-        <!-- Model Architecture & Tech Spec Section -->
-        <section id="architecture" class="section architecture-section">
-            <div class="section-header">
-                <h2 class="section-title"><i class="fa-solid fa-microchip"></i> Architecture & Model Specs</h2>
-                <p class="section-subtitle">Under the hood of the Cars24 Machine Learning API platform.</p>
-            </div>
-
-            <div class="architecture-grid">
-                <div class="glass-card spec-card">
-                    <div class="spec-icon"><i class="fa-solid fa-brain"></i></div>
-                    <h3>ML Algorithm</h3>
-                    <p class="spec-value">Linear Regression</p>
-                    <p class="spec-desc">Fitted using Scikit-Learn on automotive pricing datasets with coefficient scaling.</p>
-                </div>
-
-                <div class="glass-card spec-card">
-                    <div class="spec-icon"><i class="fa-solid fa-box-archive"></i></div>
-                    <h3>Model Artifact</h3>
-                    <p class="spec-value">saved_model.pkl</p>
-                    <p class="spec-desc">Serialized via Joblib for ultra-fast low-latency deserialization at server boot.</p>
-                </div>
-
-                <div class="glass-card spec-card">
-                    <div class="spec-icon"><i class="fa-solid fa-server"></i></div>
-                    <h3>Backend Runtime</h3>
-                    <p class="spec-value">Flask 3.1 & Gunicorn</p>
-                    <p class="spec-desc">RESTful API architecture with CORS, robust input validation, and PyTest coverage.</p>
-                </div>
-
-                <div class="glass-card spec-card">
-                    <div class="spec-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
-                    <h3>Cloud Deployment</h3>
-                    <p class="spec-value">Render & Vercel</p>
-                    <p class="spec-desc">No Docker required. Fully compatible with native Python serverless & web services.</p>
-                </div>
-            </div>
-        </section>
-
         <!-- Interactive Developer API Tester -->
         <section id="api-tester" class="section api-section">
             <div class="section-header">
                 <h2 class="section-title"><i class="fa-solid fa-code"></i> Developer REST API Tester</h2>
-                <p class="section-subtitle">Test live endpoints directly from your browser.</p>
+                <p class="section-subtitle">Test the multi-feature Decision Tree REST API directly with custom payloads.</p>
             </div>
 
             <div class="glass-card api-card">
@@ -293,7 +387,13 @@
                             <button onclick="copyCode('request-payload')" class="btn-copy"><i class="fa-regular fa-copy"></i> Copy</button>
                         </div>
                         <pre id="request-payload"><code>{
-  "year": 2022
+  "brand": "Maruti",
+  "year": 2018,
+  "km_driven": 45000,
+  "fuel": "Petrol",
+  "seller_type": "Individual",
+  "transmission": "Manual",
+  "owner": "First Owner"
 }</code></pre>
                     </div>
 
@@ -305,15 +405,21 @@
                         </div>
                         <pre id="response-payload"><code>{
   "success": true,
-  "year": 2022,
-  "predicted_price": 1021712.15,
-  "formatted_price_inr": "₹ 10,21,712",
-  "formatted_lakhs": "₹ 10.22 Lakhs",
-  "valuation_range": {
-    "min": 980843.66,
-    "max": 1062580.64,
-    "formatted_min": "₹ 9.81 Lakhs",
-    "formatted_max": "₹ 10.63 Lakhs"
+  "inputs": {
+    "brand": "Maruti",
+    "year": 2018,
+    "km_driven": 45000,
+    "fuel": "Petrol",
+    "seller_type": "Individual",
+    "transmission": "Manual",
+    "owner": "First Owner"
+  },
+  "predicted_price": 650000.0,
+  "formatted_price_inr": "₹ 6,50,000",
+  "formatted_lakhs": "₹ 6.50 Lakhs",
+  "model_metadata": {
+    "algorithm": "Decision Tree Regressor",
+    "accuracy_score": "91.92%"
   }
 }</code></pre>
                     </div>
@@ -326,11 +432,11 @@
     <footer class="footer">
         <div class="footer-container">
             <div class="footer-brand">
-                <i class="fa-solid fa-car-side"></i> Cars24 ML Valuation Platform
+                <i class="fa-solid fa-car-side"></i> Cars24 AI Valuation Platform • Decision Tree v2.0
             </div>
-            <p class="footer-text">Built with Python, Flask, Scikit-Learn & Modern Vanilla Web Tech.</p>
+            <p class="footer-text">Built with Python, Scikit-Learn Decision Trees, Flask & Modern Glassmorphism.</p>
             <div class="footer-links">
-                <a href="https://github.com/Swayam87/Cars24_ML" target="_blank"><i class="fa-brands fa-github"></i> Repository</a>
+                <a href="https://github.com/Swayam-87/Cars24_ML" target="_blank"><i class="fa-brands fa-github"></i> Repository</a>
                 <a href="#api-tester"><i class="fa-solid fa-code"></i> API Docs</a>
             </div>
         </div>
